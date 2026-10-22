@@ -42,17 +42,23 @@ Before running the application, your host computer must have virtualization laye
 nexus-vm/
 ├── src/
 │   ├── NexusVM.Core/               # Shared cross-platform orchestration layer
-│   │   ├── Detectors/              # OS & System Architecture hardware probing
-│   │   ├── Engine/                 # Dynamic QEMU CLI Command Builder
-│   │   └── Network/                # Background ADB local socket listener
-│   ├── NexusVM.UI/                 # Cross-Platform Desktop User Interface (Avalonia UI / Qt)
-│   │   ├── Views/                  # Main Display, Sidebar Control Layout, Key-mapping Dialogs
-│   │   └── ViewModels/             # Reactive UI Binding & Hypervisor Lifecycle Controllers
+│   │   ├── Detectors/              # OS, architecture, and accelerator probes
+│   │   ├── Engine/                 # QEMU command builder and process host
+│   │   ├── Protocol/               # Loopback QMP client and framebuffer capture
+│   │   └── Models/
+│   └── NexusVM.UI/                 # Avalonia desktop shell
+│       ├── Views/                  # Main window, diagnostic window, guest surface
+│       ├── ViewModels/
+│       ├── Embedding/              # Win32 HWND and X11 reparent, macOS framebuffer
+│       └── Session/
 ├── assets/
-│   ├── keymaps/                    # Custom JSON input translation tables
-│   └── skins/                      # UI Window Theme Definitions
+│   └── keymaps/
+│       └── default.json
+├── build/
+│   ├── publish-hosts.sh
+│   └── publish-hosts.ps1
 └── scripts/
-    └── setup-dependencies.sh       # Automation scripts to fetch headless QEMU binaries & ISOs
+    └── setup-dependencies.sh       # Checks that QEMU is on PATH
 ```
 
 ---
@@ -63,17 +69,14 @@ nexus-vm/
 NexusVM assumes standard QEMU system binaries are either accessible in your local system path (`PATH`) or placed systematically within the executing application target framework root under an `assets/bin/` subfolder.
 
 ### Compilation
-Ensure you have the required desktop SDK modules installed, then trigger a native framework compilation matching your environment layout:
+Build with the .NET 10 SDK. The projects target `net8.0`.
 
 ```bash
-# If built using .NET Core / Avalonia C#
-dotnet build --configuration Release
-
-# If built using C++ / Qt-CMake
-mkdir build && cd build
-cmake ..
-cmake --build . --config Release
+dotnet test NexusVM.sln
+./build/publish-hosts.sh
 ```
+
+`./build/publish-hosts.sh` publishes self-contained `win-x64`, `linux-x64`, and `osx-arm64` binaries. On Windows, use `build/publish-hosts.ps1`.
 
 ---
 

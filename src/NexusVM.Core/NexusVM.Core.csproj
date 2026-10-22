@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>NexusVM.Core</RootNamespace>
+    <AssemblyName>NexusVM.Core</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Description>Host detection, accelerator probes, and QEMU launch plans for the NexusVM shell.</Description>
+  </PropertyGroup>
+</Project>

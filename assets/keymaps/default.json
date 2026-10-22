@@ -1,0 +1,7 @@
+{
+  "profileName": "Standard FPS Profile",
+  "mappings": [
+    { "key": "W", "action": "swipe", "startX": 200, "startY": 800, "endX": 200, "endY": 700, "label": "Move Forward" },
+    { "key": "LeftClick", "action": "tap", "targetX": 960, "targetY": 540, "label": "Fire weapon" }
+  ]
+}

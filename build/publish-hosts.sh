@@ -5,7 +5,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-project="$root/src/BlueStacks2.App/BlueStacks2.App.csproj"
+project="$root/src/NexusVM.UI/NexusVM.UI.csproj"
 
 for rid in win-x64 linux-x64 osx-arm64; do
   dotnet publish "$project" \

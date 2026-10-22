@@ -1,7 +1,7 @@
 # Publish the three supported host binaries. Run this on any OS with the .NET 8+ SDK.
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$project = Join-Path $root "src/BlueStacks2.App/BlueStacks2.App.csproj"
+$project = Join-Path $root "src/NexusVM.UI/NexusVM.UI.csproj"
 
 foreach ($rid in @("win-x64", "linux-x64", "osx-arm64")) {
     dotnet publish $project `

@@ -44,6 +44,7 @@ nexus-vm/
 │   ├── NexusVM.Core/               # Shared cross-platform orchestration layer
 │   │   ├── Detectors/              # OS, architecture, and accelerator probes
 │   │   ├── Engine/                 # QEMU command builder and process host
+│   │   ├── Input/                  # Keymap profile and loopback adb input
 │   │   ├── Protocol/               # Loopback QMP client and framebuffer capture
 │   │   └── Models/
 │   └── NexusVM.UI/                 # Avalonia desktop shell
@@ -82,7 +83,7 @@ dotnet test NexusVM.sln
 
 ## 🎹 Key-Mapping Schema (`assets/keymaps/default.json`)
 
-Keyboard inputs and click coordinates are bound directly using high-performance JSON translation matrices mapped dynamically onto guest touch points over ADB channels:
+While a guest is running, a matching key — or a left click on the guest surface — is sent to `adb` at `127.0.0.1`. QEMU forwards that host port to guest port 5555 with `hostfwd`. The profile below is `assets/keymaps/default.json`:
 
 ```json
 {

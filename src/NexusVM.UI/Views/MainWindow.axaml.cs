@@ -1,15 +1,18 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using NexusVM.Core.Engine;
+using NexusVM.Core.Input;
+using NexusVM.Core.Models;
 using NexusVM.UI.Session;
 using NexusVM.UI.ViewModels;
-using NexusVM.Core.Engine;
-using NexusVM.Core.Models;
 
 namespace NexusVM.UI.Views;
 
 public partial class MainWindow : Window
 {
     private readonly MainWindowViewModel _viewModel;
+    private readonly AdbProcessClient _adb = new();
     private GuestSession? _session;
     private bool _dialogOpen;
     private bool _userStop;
@@ -28,9 +31,57 @@ public partial class MainWindow : Window
         _viewModel.InspectionCompleted += OnInspectionCompleted;
         InitializeComponent();
         DataContext = _viewModel;
+        Surface.PointerPressed += OnSurfacePointerPressed;
     }
 
     public MainWindowViewModel ViewModel => _viewModel;
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Source is TextBox || _session is null || _viewModel.Keymap is null)
+            return;
+
+        if (!_viewModel.Keymap.TryGet(e.Key.ToString(), out var mapping) || mapping is null)
+            return;
+
+        e.Handled = true;
+        _ = SendInputAsync(mapping);
+    }
+
+    private void OnSurfacePointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_session is null || _viewModel.Keymap is null)
+            return;
+
+        if (!e.GetCurrentPoint(Surface).Properties.IsLeftButtonPressed)
+            return;
+
+        if (!_viewModel.Keymap.TryGet("LeftClick", out var mapping) || mapping is null)
+            return;
+
+        _ = SendInputAsync(mapping);
+    }
+
+    private async Task SendInputAsync(KeyMapping mapping)
+    {
+        var session = _session;
+        if (session is null)
+            return;
+
+        try
+        {
+            var serial = AdbInput.LoopbackSerial(session.AdbHostPort);
+            var result = await _adb.RunAsync(AdbInput.Command(serial, mapping), CancellationToken.None).ConfigureAwait(true);
+            _viewModel.StatusMessage = result.ExitCode == 0
+                ? $"Sent {mapping.Label} to {serial}."
+                : $"adb could not send {mapping.Label}. {result.Output}".Trim();
+        }
+        catch (Exception ex)
+        {
+            _viewModel.StatusMessage = ex.Message;
+        }
+    }
 
     protected override void OnOpened(EventArgs e)
     {

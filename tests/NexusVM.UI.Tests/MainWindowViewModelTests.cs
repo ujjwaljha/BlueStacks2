@@ -167,7 +167,9 @@ public sealed class MainWindowViewModelTests
 
     private sealed class FixedPort : ILoopbackPortAllocator
     {
-        public int Allocate() => 4445;
+        private int _next = 4445;
+
+        public int Allocate() => _next++;
     }
 
     private sealed class StaticLocator : IQemuBinaryLocator

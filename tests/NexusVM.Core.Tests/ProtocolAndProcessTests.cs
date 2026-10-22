@@ -237,7 +237,9 @@ public sealed class ProtocolAndProcessTests
 
     private sealed class FixedPort : ILoopbackPortAllocator
     {
-        public int Allocate() => 4445;
+        private int _next = 4445;
+
+        public int Allocate() => _next++;
     }
 
     private sealed class DeniedProbe : IAccelerationProbe

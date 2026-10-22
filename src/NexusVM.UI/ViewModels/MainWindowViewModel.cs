@@ -1,4 +1,5 @@
 using NexusVM.Core.Engine;
+using NexusVM.Core.Input;
 using NexusVM.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -57,6 +58,13 @@ public partial class MainWindowViewModel : ObservableObject
     private string _surfaceCaption = "Guest surface";
 
     [ObservableProperty]
+    private string _keymapTitle = "No keymap loaded";
+
+    public KeymapProfile? Keymap { get; private set; }
+
+    public IReadOnlyList<KeymapRow> KeymapRows { get; private set; } = Array.Empty<KeymapRow>();
+
+    [ObservableProperty]
     private bool _isRunning;
 
     [ObservableProperty]
@@ -98,6 +106,7 @@ public partial class MainWindowViewModel : ObservableObject
             ? $"{environment.Describe()} · {acceleration.AcceleratorName}"
             : acceleration.Summary;
         StartupDiagnostic = acceleration.IsAvailable ? null : acceleration.ToException();
+        LoadKeymap();
         UpdatePreview();
         InspectionCompleted?.Invoke(this, EventArgs.Empty);
     }
@@ -178,4 +187,57 @@ public partial class MainWindowViewModel : ObservableObject
 
     private static string? NullIfBlank(string value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private void LoadKeymap()
+    {
+        var path = FindKeymap();
+        if (path is null)
+        {
+            Keymap = null;
+            KeymapTitle = "No keymap file";
+            ReplaceRows(Array.Empty<KeymapRow>());
+            return;
+        }
+
+        try
+        {
+            var profile = KeymapProfile.Load(path);
+            Keymap = profile;
+            KeymapTitle = profile.ProfileName;
+            ReplaceRows(profile.Mappings.Select(mapping => new KeymapRow
+            {
+                Gesture = mapping.Key,
+                Detail = mapping.Label,
+            }).ToArray());
+        }
+        catch (Exception ex) when (ex is KeymapFormatException or IOException)
+        {
+            Keymap = null;
+            KeymapTitle = "Keymap could not be read";
+            ReplaceRows(new[] { new KeymapRow { Gesture = "Error", Detail = ex.Message } });
+        }
+    }
+
+    private void ReplaceRows(IReadOnlyList<KeymapRow> rows)
+    {
+        KeymapRows = rows;
+        OnPropertyChanged(nameof(KeymapRows));
+    }
+
+    private static string? FindKeymap()
+    {
+        var candidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "assets", "keymaps", "default.json"),
+            Path.Combine(Directory.GetCurrentDirectory(), "assets", "keymaps", "default.json"),
+        };
+        return candidates.FirstOrDefault(File.Exists);
+    }
+}
+
+public sealed class KeymapRow
+{
+    public required string Gesture { get; init; }
+
+    public required string Detail { get; init; }
 }

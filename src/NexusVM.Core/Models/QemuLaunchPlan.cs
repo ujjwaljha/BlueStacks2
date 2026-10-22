@@ -18,5 +18,8 @@ public sealed record QemuLaunchPlan
 
     public required int QmpPort { get; init; }
 
+    /// <summary>Host side of the QEMU user-net forward to the guest adbd port 5555. Always loopback.</summary>
+    public required int AdbHostPort { get; init; }
+
     public required string WindowTitle { get; init; }
 }

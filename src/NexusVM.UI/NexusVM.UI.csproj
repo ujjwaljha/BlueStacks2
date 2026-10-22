@@ -45,4 +45,8 @@
   <ItemGroup>
     <ProjectReference Include="..\NexusVM.Core\NexusVM.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\assets\keymaps\default.json" Link="assets\keymaps\default.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

@@ -72,6 +72,24 @@
         </StackPanel>
 
         <Border Classes="panel">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="section" Text="KEYMAP" />
+            <TextBlock Text="{Binding KeymapTitle}" FontWeight="SemiBold" />
+            <ItemsControl ItemsSource="{Binding KeymapRows}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:KeymapRow">
+                  <TextBlock Margin="0,2,0,0" TextWrapping="Wrap">
+                    <Run Text="{Binding Gesture}" FontWeight="SemiBold" />
+                    <Run Text="  " />
+                    <Run Text="{Binding Detail}" />
+                  </TextBlock>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="panel">
           <StackPanel Spacing="6">
             <TextBlock Classes="section" Text="QEMU COMMAND" />
             <TextBox Classes="mono"

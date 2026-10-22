@@ -50,24 +50,23 @@ public sealed class QemuCommandBuilder
         var firmwareRequired = environment.Platform == HostPlatformKind.MacOsArm64;
         var firmware = RequireImage(request.FirmwarePath, "UEFI firmware", firmwareRequired);
 
-        var port = _ports.Allocate();
-        if (port is < 1 or > 65535)
-            throw new InvalidOperationException($"The loopback port allocator returned {port}.");
+        var port = RequirePort(_ports.Allocate());
+        var adbPort = RequirePort(_ports.Allocate());
 
         var arguments = new List<string>();
         switch (environment.Platform)
         {
             case HostPlatformKind.WindowsX64:
                 AddContract(arguments, "whpx", cpuHost: false);
-                AddPcGuest(arguments, DisplayEmbedMode.NativeWindow, port, system!, data);
+                AddPcGuest(arguments, DisplayEmbedMode.NativeWindow, port, adbPort, system!, data);
                 break;
             case HostPlatformKind.LinuxX64:
                 AddContract(arguments, "kvm", cpuHost: false);
-                AddPcGuest(arguments, DisplayEmbedMode.NativeWindow, port, system!, data);
+                AddPcGuest(arguments, DisplayEmbedMode.NativeWindow, port, adbPort, system!, data);
                 break;
             case HostPlatformKind.MacOsArm64:
                 AddContract(arguments, "hvf", cpuHost: true);
-                AddArmGuest(arguments, port, system!, data, firmware!);
+                AddArmGuest(arguments, port, adbPort, system!, data, firmware!);
                 break;
             default:
                 throw HostCompatibility.ForUnsupported(environment).ToException();
@@ -82,6 +81,7 @@ public sealed class QemuCommandBuilder
             Platform = environment.Platform,
             DisplayMode = HostProfiles.Display(environment.Platform),
             QmpPort = port,
+            AdbHostPort = adbPort,
             WindowTitle = GuestWindowTitle,
         };
     }
@@ -112,6 +112,7 @@ public sealed class QemuCommandBuilder
         List<string> arguments,
         DisplayEmbedMode display,
         int qmpPort,
+        int adbHostPort,
         string systemImage,
         string? dataImage)
     {
@@ -129,12 +130,13 @@ public sealed class QemuCommandBuilder
         AddDrive(arguments, "system", systemImage);
         if (dataImage is not null)
             AddDrive(arguments, "userdata", dataImage);
-        AddUserNet(arguments);
+        AddUserNet(arguments, adbHostPort);
     }
 
     private static void AddArmGuest(
         List<string> arguments,
         int qmpPort,
+        int adbHostPort,
         string systemImage,
         string? dataImage,
         string firmware)
@@ -157,7 +159,7 @@ public sealed class QemuCommandBuilder
         AddDrive(arguments, "system", systemImage);
         if (dataImage is not null)
             AddDrive(arguments, "userdata", dataImage);
-        AddUserNet(arguments);
+        AddUserNet(arguments, adbHostPort);
     }
 
     private static void AddDisplay(List<string> arguments, DisplayEmbedMode display)
@@ -183,12 +185,21 @@ public sealed class QemuCommandBuilder
         arguments.Add($"virtio-blk-pci,drive={id}");
     }
 
-    private static void AddUserNet(List<string> arguments)
+    private static void AddUserNet(List<string> arguments, int adbHostPort)
     {
+        var host = adbHostPort.ToString(System.Globalization.CultureInfo.InvariantCulture);
         arguments.Add("-netdev");
-        arguments.Add("user,id=net0");
+        arguments.Add("user,id=net0,hostfwd=tcp:127.0.0.1:" + host + "-:5555");
         arguments.Add("-device");
         arguments.Add("virtio-net-pci,netdev=net0");
+    }
+
+    private static int RequirePort(int port)
+    {
+        if (port is < 1 or > 65535)
+            throw new InvalidOperationException($"The loopback port allocator returned {port}.");
+
+        return port;
     }
 
     private string? RequireImage(string? path, string label, bool required)

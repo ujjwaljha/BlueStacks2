@@ -21,6 +21,8 @@ public sealed class QemuCommandBuilderTests
         Assert.Equal(DisplayEmbedMode.NativeWindow, plan.DisplayMode);
         Assert.Contains("sdl,window-close=off", plan.Arguments);
         Assert.Contains("tcp:127.0.0.1:4445,server,nowait", plan.Arguments);
+        Assert.Contains("user,id=net0,hostfwd=tcp:127.0.0.1:4446-:5555", plan.Arguments);
+        Assert.Equal(4446, plan.AdbHostPort);
         Assert.DoesNotContain(plan.Arguments, argument => argument.Contains("0.0.0.0", StringComparison.Ordinal));
         Assert.DoesNotContain(plan.Arguments, argument => argument.Contains("-accel ", StringComparison.Ordinal));
     }
@@ -193,7 +195,9 @@ public sealed class QemuCommandBuilderTests
 
     private sealed class FixedPort : ILoopbackPortAllocator
     {
-        public int Allocate() => 4445;
+        private int _next = 4445;
+
+        public int Allocate() => _next++;
     }
 
     private sealed class PlanFacts : IEnvironmentFacts

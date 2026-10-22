@@ -13,7 +13,10 @@ public sealed class KeymapProfile
         Mappings = mappings;
         _byKey = new Dictionary<string, KeyMapping>(StringComparer.OrdinalIgnoreCase);
         foreach (var mapping in mappings)
-            _byKey[mapping.Key] = mapping;
+        {
+            if (!_byKey.TryAdd(mapping.Key, mapping))
+                throw new KeymapFormatException($"Key '{mapping.Key}' is used more than once.");
+        }
     }
 
     public string ProfileName { get; }
@@ -68,6 +71,41 @@ public sealed class KeymapProfile
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         return Parse(File.ReadAllText(path));
+    }
+
+    public string ToJson()
+    {
+        var mappings = new List<Dictionary<string, object?>>(Mappings.Count);
+        foreach (var mapping in Mappings)
+        {
+            var entry = new Dictionary<string, object?>
+            {
+                ["key"] = mapping.Key,
+                ["action"] = mapping.Action,
+                ["label"] = mapping.Label,
+            };
+            if (mapping.Action == "tap")
+            {
+                entry["targetX"] = mapping.TargetX;
+                entry["targetY"] = mapping.TargetY;
+            }
+            else
+            {
+                entry["startX"] = mapping.StartX;
+                entry["startY"] = mapping.StartY;
+                entry["endX"] = mapping.EndX;
+                entry["endY"] = mapping.EndY;
+            }
+
+            mappings.Add(entry);
+        }
+
+        var root = new Dictionary<string, object?>
+        {
+            ["profileName"] = ProfileName,
+            ["mappings"] = mappings,
+        };
+        return JsonSerializer.Serialize(root, new JsonSerializerOptions { WriteIndented = true });
     }
 
     private static readonly JsonSerializerOptions SerializerOptions = new()

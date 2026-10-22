@@ -83,7 +83,7 @@ dotnet test NexusVM.sln
 
 ## 🎹 Key-Mapping Schema (`assets/keymaps/default.json`)
 
-While a guest is running, a matching key — or a left click on the guest surface — is sent to `adb` at `127.0.0.1`. QEMU forwards that host port to guest port 5555 with `hostfwd`. The profile below is `assets/keymaps/default.json`:
+When a guest starts, NexusVM runs `adb connect 127.0.0.1:<port>`. QEMU forwards that port to guest port 5555. Matching keys, and a left click on the surface, then become `adb shell input tap` or `swipe`. Edit writes the profile back to `assets/keymaps/default.json`:
 
 ```json
 {

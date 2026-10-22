@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NexusVM.UI.ViewModels"
+        x:Class="NexusVM.UI.Views.KeymapEditorWindow"
+        x:DataType="vm:KeymapEditorViewModel"
+        Title="Keymap"
+        Width="860"
+        Height="560"
+        MinWidth="720"
+        MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+  <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="20" RowSpacing="12">
+    <StackPanel Spacing="6">
+      <TextBlock Classes="section" Text="PROFILE" />
+      <TextBox Text="{Binding ProfileName}" PlaceholderText="Profile name" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1">
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:KeymapEditorRow">
+            <Grid ColumnDefinitions="100,90,70,70,70,70,70,70,*,Auto"
+                  ColumnSpacing="6"
+                  Margin="0,0,0,8">
+              <TextBox Grid.Column="0" Text="{Binding Key}" PlaceholderText="Key" />
+              <TextBox Grid.Column="1" Text="{Binding Action}" PlaceholderText="tap or swipe" />
+              <TextBox Grid.Column="2" Text="{Binding TargetX}" PlaceholderText="targetX" />
+              <TextBox Grid.Column="3" Text="{Binding TargetY}" PlaceholderText="targetY" />
+              <TextBox Grid.Column="4" Text="{Binding StartX}" PlaceholderText="startX" />
+              <TextBox Grid.Column="5" Text="{Binding StartY}" PlaceholderText="startY" />
+              <TextBox Grid.Column="6" Text="{Binding EndX}" PlaceholderText="endX" />
+              <TextBox Grid.Column="7" Text="{Binding EndY}" PlaceholderText="endY" />
+              <TextBox Grid.Column="8" Text="{Binding Label}" PlaceholderText="Label" />
+              <Button Grid.Column="9" Content="Remove" Click="OnRemove" />
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <TextBlock Grid.Row="2" Text="{Binding Error}" TextWrapping="Wrap" />
+
+    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+      <Button Content="Add tap" Click="OnAdd" />
+      <Button Content="Cancel" Click="OnCancel" />
+      <Button Content="Save" Click="OnSave" />
+    </StackPanel>
+  </Grid>
+</Window>

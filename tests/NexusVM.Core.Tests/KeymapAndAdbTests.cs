@@ -77,6 +77,36 @@ public sealed class KeymapAndAdbTests
         Assert.Contains("targetX", exception.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Connect_and_disconnect_are_loopback_only()
+    {
+        Assert.Equal(new[] { "connect", "127.0.0.1:5555" }, AdbInput.ConnectCommand("127.0.0.1:5555"));
+        Assert.Equal(new[] { "disconnect", "127.0.0.1:5555" }, AdbInput.DisconnectCommand("127.0.0.1:5555"));
+        Assert.Throws<ArgumentException>(() => AdbInput.EnsureSafe(new[] { "shell", "reboot" }));
+        Assert.Throws<ArgumentException>(() => AdbInput.ConnectCommand("10.0.0.8:5555"));
+    }
+
+    [Fact]
+    public void Saved_json_round_trips_tap_and_swipe()
+    {
+        var profile = KeymapProfile.Parse("""
+            {
+              "profileName": "Round",
+              "mappings": [
+                { "key": "F", "action": "tap", "targetX": 10, "targetY": 20, "label": "Fire" },
+                { "key": "W", "action": "swipe", "startX": 1, "startY": 2, "endX": 3, "endY": 4, "label": "Forward" }
+              ]
+            }
+            """);
+
+        var again = KeymapProfile.Parse(profile.ToJson());
+        var tap = Require(again, "F");
+        var swipe = Require(again, "W");
+        Assert.Equal("Round", again.ProfileName);
+        Assert.Equal(10, tap.TargetX);
+        Assert.Equal(4, swipe.EndY);
+    }
+
     private static KeyMapping Require(KeymapProfile profile, string key)
     {
         Assert.True(profile.TryGet(key, out var mapping));

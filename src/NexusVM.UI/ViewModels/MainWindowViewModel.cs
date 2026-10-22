@@ -62,6 +62,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     public KeymapProfile? Keymap { get; private set; }
 
+    public string? KeymapPath { get; private set; }
+
     public IReadOnlyList<KeymapRow> KeymapRows { get; private set; } = Array.Empty<KeymapRow>();
 
     [ObservableProperty]
@@ -188,9 +190,23 @@ public partial class MainWindowViewModel : ObservableObject
     private static string? NullIfBlank(string value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
+    public void ReplaceKeymap(KeymapProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        var path = KeymapPath ?? Path.Combine(AppContext.BaseDirectory, "assets", "keymaps", "default.json");
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+
+        File.WriteAllText(path, profile.ToJson() + Environment.NewLine);
+        KeymapPath = path;
+        ApplyProfile(profile);
+    }
+
     private void LoadKeymap()
     {
         var path = FindKeymap();
+        KeymapPath = path;
         if (path is null)
         {
             Keymap = null;
@@ -201,14 +217,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         try
         {
-            var profile = KeymapProfile.Load(path);
-            Keymap = profile;
-            KeymapTitle = profile.ProfileName;
-            ReplaceRows(profile.Mappings.Select(mapping => new KeymapRow
-            {
-                Gesture = mapping.Key,
-                Detail = mapping.Label,
-            }).ToArray());
+            ApplyProfile(KeymapProfile.Load(path));
         }
         catch (Exception ex) when (ex is KeymapFormatException or IOException)
         {
@@ -216,6 +225,17 @@ public partial class MainWindowViewModel : ObservableObject
             KeymapTitle = "Keymap could not be read";
             ReplaceRows(new[] { new KeymapRow { Gesture = "Error", Detail = ex.Message } });
         }
+    }
+
+    private void ApplyProfile(KeymapProfile profile)
+    {
+        Keymap = profile;
+        KeymapTitle = profile.ProfileName;
+        ReplaceRows(profile.Mappings.Select(mapping => new KeymapRow
+        {
+            Gesture = mapping.Key,
+            Detail = mapping.Label,
+        }).ToArray());
     }
 
     private void ReplaceRows(IReadOnlyList<KeymapRow> rows)
@@ -228,8 +248,8 @@ public partial class MainWindowViewModel : ObservableObject
     {
         var candidates = new[]
         {
-            Path.Combine(AppContext.BaseDirectory, "assets", "keymaps", "default.json"),
             Path.Combine(Directory.GetCurrentDirectory(), "assets", "keymaps", "default.json"),
+            Path.Combine(AppContext.BaseDirectory, "assets", "keymaps", "default.json"),
         };
         return candidates.FirstOrDefault(File.Exists);
     }

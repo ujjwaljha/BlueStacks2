@@ -31,6 +31,46 @@ public static class AdbInput
             && serial == LoopbackSerial(port);
     }
 
+    public static IReadOnlyList<string> ConnectCommand(string serial)
+    {
+        if (!IsLoopbackSerial(serial))
+            throw new ArgumentException("ADB serial must be 127.0.0.1 and a port.", nameof(serial));
+
+        return new[] { "connect", serial };
+    }
+
+    public static IReadOnlyList<string> DisconnectCommand(string serial)
+    {
+        if (!IsLoopbackSerial(serial))
+            throw new ArgumentException("ADB serial must be 127.0.0.1 and a port.", nameof(serial));
+
+        return new[] { "disconnect", serial };
+    }
+
+    public static void EnsureSafe(IReadOnlyList<string> arguments)
+    {
+        ArgumentNullException.ThrowIfNull(arguments);
+        if (arguments.Count == 2 && arguments[0] is "connect" or "disconnect" && IsLoopbackSerial(arguments[1]))
+            return;
+
+        var input = arguments.Count == 7 && arguments[4] == "tap"
+            || arguments.Count == 10 && arguments[4] == "swipe";
+        if (input
+            && arguments[0] == "-s"
+            && IsLoopbackSerial(arguments[1])
+            && arguments[2] == "shell"
+            && arguments[3] == "input"
+            && arguments.Skip(5).All(IsCoordinate))
+        {
+            return;
+        }
+
+        throw new ArgumentException("ADB arguments must be a loopback connect, disconnect, or input command.", nameof(arguments));
+    }
+
+    private static bool IsCoordinate(string value) =>
+        int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number) && number is >= 0 and <= 10000;
+
     public static IReadOnlyList<string> Command(string serial, KeyMapping mapping)
     {
         ArgumentNullException.ThrowIfNull(mapping);
@@ -87,9 +127,7 @@ public sealed class AdbProcessClient
 
     public async Task<AdbResult> RunAsync(IReadOnlyList<string> arguments, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(arguments);
-        if (arguments.Count < 4 || arguments[0] != "-s" || !AdbInput.IsLoopbackSerial(arguments[1]))
-            throw new ArgumentException("ADB arguments must start with -s and a loopback serial.", nameof(arguments));
+        AdbInput.EnsureSafe(arguments);
 
         var startInfo = new ProcessStartInfo
         {
@@ -116,7 +154,24 @@ public sealed class AdbProcessClient
         {
             var stdout = process.StandardOutput.ReadToEndAsync(cancellationToken);
             var stderr = process.StandardError.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                try
+                {
+                    if (!process.HasExited)
+                        process.Kill(entireProcessTree: true);
+                }
+                catch (InvalidOperationException)
+                {
+                    // already exited
+                }
+
+                throw;
+            }
             var output = new StringBuilder();
             var error = await stderr.ConfigureAwait(false);
             var standard = await stdout.ConfigureAwait(false);

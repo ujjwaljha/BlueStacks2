@@ -73,7 +73,10 @@
 
         <Border Classes="panel">
           <StackPanel Spacing="4">
-            <TextBlock Classes="section" Text="KEYMAP" />
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="section" Text="KEYMAP" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Content="Edit" Click="OnEditKeymap" />
+            </Grid>
             <TextBlock Text="{Binding KeymapTitle}" FontWeight="SemiBold" />
             <ItemsControl ItemsSource="{Binding KeymapRows}">
               <ItemsControl.ItemTemplate>

@@ -135,6 +135,7 @@ public partial class MainWindow : Window
             _session = GuestSession.Start(launch, Surface);
             _session.Exited += OnGuestExited;
             _viewModel.StatusMessage = $"Guest running · pid {_session.ProcessId} · {launch.Plan.Binary}";
+            _ = ConnectAdbAsync(_session);
         }
         catch (Exception ex)
         {
@@ -150,7 +151,10 @@ public partial class MainWindow : Window
         var session = _session;
         _session = null;
         if (session is not null)
+        {
+            await DisconnectAdbAsync(session).ConfigureAwait(true);
             await session.DisposeAsync().ConfigureAwait(true);
+        }
 
         _userStop = false;
         Surface.ShowIdle();
@@ -167,6 +171,7 @@ public partial class MainWindow : Window
             if (_userStop || session is null)
                 return;
 
+            _ = DisconnectAdbAsync(session);
             var log = session.ReadLog();
             var details = string.IsNullOrWhiteSpace(log)
                 ? new[] { "exitCode=" + code }
@@ -178,6 +183,59 @@ public partial class MainWindow : Window
                 details));
             _ = session.DisposeAsync();
         });
+    }
+
+    private async void OnEditKeymap(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var dialog = new KeymapEditorWindow(_viewModel.Keymap);
+        await dialog.ShowDialog(this);
+        if (dialog.Saved is not { } profile)
+            return;
+
+        try
+        {
+            _viewModel.ReplaceKeymap(profile);
+            _viewModel.StatusMessage = "Saved keymap " + profile.ProfileName + ".";
+        }
+        catch (Exception ex)
+        {
+            await ShowDiagnosticAsync(ToDiagnostic(ex));
+        }
+    }
+
+    private async Task ConnectAdbAsync(GuestSession session)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+        try
+        {
+            var serial = AdbInput.LoopbackSerial(session.AdbHostPort);
+            var result = await _adb.RunAsync(AdbInput.ConnectCommand(serial), timeout.Token).ConfigureAwait(true);
+            if (!ReferenceEquals(_session, session))
+                return;
+
+            _viewModel.StatusMessage = result.ExitCode == 0
+                ? $"Guest running · adb {serial}. {result.Output}".Trim()
+                : $"Guest running. adb connect failed. {result.Output}".Trim();
+        }
+        catch (Exception ex)
+        {
+            if (ReferenceEquals(_session, session))
+                _viewModel.StatusMessage = "Guest running. " + ex.Message;
+        }
+    }
+
+    private async Task DisconnectAdbAsync(GuestSession session)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        try
+        {
+            var serial = AdbInput.LoopbackSerial(session.AdbHostPort);
+            await _adb.RunAsync(AdbInput.DisconnectCommand(serial), timeout.Token).ConfigureAwait(true);
+        }
+        catch (Exception)
+        {
+            // Stopping the guest does not depend on adb answering.
+        }
     }
 
     private async void OnBrowseSystem(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>

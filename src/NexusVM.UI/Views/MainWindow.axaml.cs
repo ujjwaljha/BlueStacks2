@@ -132,8 +132,10 @@ public partial class MainWindow : Window
         try
         {
             _userStop = false;
+            _viewModel.ClearGuestLog();
             _session = GuestSession.Start(launch, Surface);
             _session.Exited += OnGuestExited;
+            _session.LogReceived += OnGuestLog;
             _viewModel.StatusMessage = $"Guest running · pid {_session.ProcessId} · {launch.Plan.Binary}";
             _ = ConnectAdbAsync(_session);
         }
@@ -203,19 +205,48 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnGuestLog(object? sender, string line)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => _viewModel.AppendGuestLog(line));
+    }
+
     private async Task ConnectAdbAsync(GuestSession session)
     {
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
         try
         {
             var serial = AdbInput.LoopbackSerial(session.AdbHostPort);
-            var result = await _adb.RunAsync(AdbInput.ConnectCommand(serial), timeout.Token).ConfigureAwait(true);
+            var connect = await _adb.RunAsync(AdbInput.ConnectCommand(serial), timeout.Token).ConfigureAwait(true);
             if (!ReferenceEquals(_session, session))
                 return;
 
-            _viewModel.StatusMessage = result.ExitCode == 0
-                ? $"Guest running · adb {serial}. {result.Output}".Trim()
-                : $"Guest running. adb connect failed. {result.Output}".Trim();
+            if (connect.ExitCode != 0)
+            {
+                _viewModel.StatusMessage = $"Guest running. adb connect failed. {connect.Output}".Trim();
+                return;
+            }
+
+            var state = "absent";
+            for (var attempt = 0; attempt < 6 && ReferenceEquals(_session, session); attempt++)
+            {
+                var listed = await _adb.RunAsync(AdbInput.DevicesCommand(), timeout.Token).ConfigureAwait(true);
+                state = AdbInput.DeviceState(listed.Output, serial);
+                if (state == "device")
+                    break;
+
+                await Task.Delay(TimeSpan.FromMilliseconds(500), timeout.Token).ConfigureAwait(true);
+            }
+
+            if (!ReferenceEquals(_session, session))
+                return;
+
+            _viewModel.StatusMessage = state switch
+            {
+                "device" => $"Guest running · adb {serial} is online.",
+                "unauthorized" => $"Guest running · adb {serial} is unauthorized. Accept the guest prompt.",
+                "offline" => $"Guest running · adb {serial} is offline. adbd may still be starting.",
+                _ => $"Guest running · adb {serial} has not appeared yet.",
+            };
         }
         catch (Exception ex)
         {

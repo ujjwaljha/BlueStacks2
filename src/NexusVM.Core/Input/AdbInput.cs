@@ -39,6 +39,38 @@ public static class AdbInput
         return new[] { "connect", serial };
     }
 
+    public static IReadOnlyList<string> DevicesCommand() => new[] { "devices" };
+
+    public static string DeviceState(string devicesOutput, string serial)
+    {
+        if (!IsLoopbackSerial(serial))
+            throw new ArgumentException("ADB serial must be 127.0.0.1 and a port.", nameof(serial));
+
+        if (string.IsNullOrWhiteSpace(devicesOutput))
+            return "absent";
+
+        foreach (var raw in devicesOutput.Split('\n'))
+        {
+            var line = raw.Trim();
+            if (line.Length == 0 || line.StartsWith("List of devices", StringComparison.Ordinal))
+                continue;
+
+            var parts = line.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2 || !string.Equals(parts[0], serial, StringComparison.Ordinal))
+                continue;
+
+            return parts[1] switch
+            {
+                "device" => "device",
+                "offline" => "offline",
+                "unauthorized" => "unauthorized",
+                _ => "unknown",
+            };
+        }
+
+        return "absent";
+    }
+
     public static IReadOnlyList<string> DisconnectCommand(string serial)
     {
         if (!IsLoopbackSerial(serial))
@@ -50,6 +82,9 @@ public static class AdbInput
     public static void EnsureSafe(IReadOnlyList<string> arguments)
     {
         ArgumentNullException.ThrowIfNull(arguments);
+        if (arguments.Count == 1 && arguments[0] == "devices")
+            return;
+
         if (arguments.Count == 2 && arguments[0] is "connect" or "disconnect" && IsLoopbackSerial(arguments[1]))
             return;
 

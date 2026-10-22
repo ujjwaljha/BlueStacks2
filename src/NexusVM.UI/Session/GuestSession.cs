@@ -27,6 +27,12 @@ public sealed class GuestSession : IAsyncDisposable
 
     public int AdbHostPort => _process.Plan.AdbHostPort;
 
+    public event EventHandler<string>? LogReceived
+    {
+        add => _process.LogReceived += value;
+        remove => _process.LogReceived -= value;
+    }
+
     public event EventHandler<int>? Exited
     {
         add

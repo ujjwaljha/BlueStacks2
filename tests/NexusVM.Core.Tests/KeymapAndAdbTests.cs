@@ -78,6 +78,25 @@ public sealed class KeymapAndAdbTests
     }
 
     [Fact]
+    public void Device_list_reports_only_the_loopback_serial()
+    {
+        const string output = """
+            List of devices attached
+            emulator-5554	device
+            127.0.0.1:5555	offline
+
+            """;
+
+        Assert.Equal("offline", AdbInput.DeviceState(output, "127.0.0.1:5555"));
+        Assert.Equal("absent", AdbInput.DeviceState(output, "127.0.0.1:5557"));
+        Assert.Equal("device", AdbInput.DeviceState("127.0.0.1:5555 device", "127.0.0.1:5555"));
+        Assert.Equal("unauthorized", AdbInput.DeviceState("127.0.0.1:5555\tunauthorized", "127.0.0.1:5555"));
+        Assert.Equal(new[] { "devices" }, AdbInput.DevicesCommand());
+        AdbInput.EnsureSafe(AdbInput.DevicesCommand());
+        Assert.Throws<ArgumentException>(() => AdbInput.EnsureSafe(new[] { "devices", "-l" }));
+    }
+
+    [Fact]
     public void Connect_and_disconnect_are_loopback_only()
     {
         Assert.Equal(new[] { "connect", "127.0.0.1:5555" }, AdbInput.ConnectCommand("127.0.0.1:5555"));

@@ -55,6 +55,9 @@ public partial class MainWindowViewModel : ObservableObject
     private string _statusMessage = "Checking this host.";
 
     [ObservableProperty]
+    private string _guestLog = string.Empty;
+
+    [ObservableProperty]
     private string _surfaceCaption = "Guest surface";
 
     [ObservableProperty]
@@ -189,6 +192,18 @@ public partial class MainWindowViewModel : ObservableObject
 
     private static string? NullIfBlank(string value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    public void ClearGuestLog() => GuestLog = string.Empty;
+
+    public void AppendGuestLog(string line)
+    {
+        if (string.IsNullOrEmpty(line))
+            return;
+
+        var next = string.IsNullOrEmpty(GuestLog) ? line : GuestLog + Environment.NewLine + line;
+        const int cap = 12000;
+        GuestLog = next.Length <= cap ? next : next[^cap..];
+    }
 
     public void ReplaceKeymap(KeymapProfile profile)
     {

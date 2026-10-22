@@ -137,6 +137,8 @@ public sealed class QemuGuestProcess : IAsyncDisposable
             return _log.ToString();
     }
 
+    public event EventHandler<string>? LogReceived;
+
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
@@ -196,6 +198,8 @@ public sealed class QemuGuestProcess : IAsyncDisposable
 
             _log.AppendLine(line);
         }
+
+        LogReceived?.Invoke(this, line);
     }
 
     private static void ValidateExecutable(string binaryPath, string expectedName)

@@ -112,12 +112,20 @@
             Background="#0C0E11"
             CornerRadius="10"
             ClipToBounds="True">
-      <Grid RowDefinitions="Auto,*">
+      <Grid RowDefinitions="Auto,*,140">
         <TextBlock Grid.Row="0"
                    Margin="14,10"
                    Opacity="0.75"
                    Text="{Binding SurfaceCaption}" />
         <views:QemuSurfaceView Grid.Row="1" x:Name="Surface" />
+        <TextBox Grid.Row="2"
+                 Classes="mono"
+                 Margin="10"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 TextWrapping="NoWrap"
+                 PlaceholderText="Guest log"
+                 Text="{Binding GuestLog, Mode=OneWay}" />
       </Grid>
     </Border>
 

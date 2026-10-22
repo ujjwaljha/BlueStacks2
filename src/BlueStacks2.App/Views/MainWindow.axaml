@@ -1,0 +1,107 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BlueStacks2.App.ViewModels"
+        xmlns:views="using:BlueStacks2.App.Views"
+        x:Class="BlueStacks2.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="BlueStacks2"
+        Width="1180"
+        Height="760"
+        MinWidth="960"
+        MinHeight="640"
+        WindowStartupLocation="CenterScreen">
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="380,*" Background="#14171B">
+    <Border Grid.ColumnSpan="2" Padding="20,16" Background="#101216">
+      <StackPanel Spacing="2">
+        <TextBlock Text="BlueStacks2" FontSize="20" FontWeight="SemiBold" />
+        <TextBlock Opacity="0.7" Text="QEMU orchestration shell for Android guests" />
+      </StackPanel>
+    </Border>
+
+    <ScrollViewer Grid.Row="1" Grid.Column="0" Padding="16,12,16,8">
+      <StackPanel>
+        <Border Classes="panel">
+          <StackPanel Spacing="4">
+            <TextBlock Classes="section" Text="HOST" />
+            <TextBlock Text="{Binding HostSummary}" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding ArchitectureSummary}" Opacity="0.75" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="panel">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="section" Text="ACCELERATOR" />
+            <TextBlock Text="{Binding AcceleratorState}" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding AcceleratorSummary}" TextWrapping="Wrap" />
+            <TextBox Text="{Binding Remediation, Mode=OneWay}"
+                     IsVisible="{Binding ShowRemediation}"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     MaxHeight="140" />
+          </StackPanel>
+        </Border>
+
+        <Border Classes="panel">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="section" Text="GUEST IMAGES" />
+            <TextBlock Text="System image" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Grid.Column="0" Text="{Binding SystemImagePath}" PlaceholderText="Android system image" />
+              <Button Grid.Column="1" Content="Browse" Click="OnBrowseSystem" />
+            </Grid>
+            <TextBlock Text="Data image" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Grid.Column="0" Text="{Binding DataImagePath}" PlaceholderText="Optional userdata image" />
+              <Button Grid.Column="1" Content="Browse" Click="OnBrowseData" />
+            </Grid>
+            <StackPanel Spacing="8" IsVisible="{Binding FirmwareRequired}">
+              <TextBlock Text="UEFI firmware" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox Grid.Column="0" Text="{Binding FirmwarePath}" PlaceholderText="QEMU_EFI.fd" />
+                <Button Grid.Column="1" Content="Browse" Click="OnBrowseFirmware" />
+              </Grid>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+          <Button Content="Check again" Command="{Binding RefreshHostCommand}" />
+          <Button Content="Launch guest" Command="{Binding LaunchCommand}" Padding="16,8" />
+          <Button Content="Stop" Command="{Binding StopCommand}" />
+        </StackPanel>
+
+        <Border Classes="panel">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="section" Text="QEMU COMMAND" />
+            <TextBox Classes="mono"
+                     Text="{Binding CommandPreview, Mode=OneWay}"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     MinHeight="120" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Row="1"
+            Grid.Column="1"
+            Margin="0,12,16,8"
+            Background="#0C0E11"
+            CornerRadius="10"
+            ClipToBounds="True">
+      <Grid RowDefinitions="Auto,*">
+        <TextBlock Grid.Row="0"
+                   Margin="14,10"
+                   Opacity="0.75"
+                   Text="{Binding SurfaceCaption}" />
+        <views:QemuSurfaceView Grid.Row="1" x:Name="Surface" />
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="2" Grid.ColumnSpan="2" Padding="16,10" Background="#101216">
+      <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+    </Border>
+  </Grid>
+</Window>

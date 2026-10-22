@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>BlueStacks2.Core</RootNamespace>
+    <AssemblyName>BlueStacks2.Core</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Description>Host detection, accelerator probes, and QEMU launch plans for the BlueStacks2 shell.</Description>
+  </PropertyGroup>
+</Project>

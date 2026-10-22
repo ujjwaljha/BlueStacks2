@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2C9E5C4A-66D5-4696-9B4C-27F2F4EADF35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlueStacks2.Core", "src\BlueStacks2.Core\BlueStacks2.Core.csproj", "{F104158D-3383-4DE2-A11F-4EE4B52B5A78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlueStacks2.App", "src\BlueStacks2.App\BlueStacks2.App.csproj", "{5BF8ED21-A317-49FE-9B17-F8AA296F9338}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{8F7432D7-A660-42AE-9761-9BB5D43B6014}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlueStacks2.Core.Tests", "tests\BlueStacks2.Core.Tests\BlueStacks2.Core.Tests.csproj", "{D5A283D1-7124-4AAD-B350-FC8C90D60590}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlueStacks2.App.Tests", "tests\BlueStacks2.App.Tests\BlueStacks2.App.Tests.csproj", "{0040E8C4-8D70-48EB-90BF-A706D6F310D4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F104158D-3383-4DE2-A11F-4EE4B52B5A78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F104158D-3383-4DE2-A11F-4EE4B52B5A78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F104158D-3383-4DE2-A11F-4EE4B52B5A78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F104158D-3383-4DE2-A11F-4EE4B52B5A78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BF8ED21-A317-49FE-9B17-F8AA296F9338}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BF8ED21-A317-49FE-9B17-F8AA296F9338}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BF8ED21-A317-49FE-9B17-F8AA296F9338}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BF8ED21-A317-49FE-9B17-F8AA296F9338}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5A283D1-7124-4AAD-B350-FC8C90D60590}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5A283D1-7124-4AAD-B350-FC8C90D60590}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5A283D1-7124-4AAD-B350-FC8C90D60590}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5A283D1-7124-4AAD-B350-FC8C90D60590}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0040E8C4-8D70-48EB-90BF-A706D6F310D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0040E8C4-8D70-48EB-90BF-A706D6F310D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0040E8C4-8D70-48EB-90BF-A706D6F310D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0040E8C4-8D70-48EB-90BF-A706D6F310D4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F104158D-3383-4DE2-A11F-4EE4B52B5A78} = {2C9E5C4A-66D5-4696-9B4C-27F2F4EADF35}
+		{5BF8ED21-A317-49FE-9B17-F8AA296F9338} = {2C9E5C4A-66D5-4696-9B4C-27F2F4EADF35}
+		{D5A283D1-7124-4AAD-B350-FC8C90D60590} = {8F7432D7-A660-42AE-9761-9BB5D43B6014}
+		{0040E8C4-8D70-48EB-90BF-A706D6F310D4} = {8F7432D7-A660-42AE-9761-9BB5D43B6014}
+	EndGlobalSection
+EndGlobal

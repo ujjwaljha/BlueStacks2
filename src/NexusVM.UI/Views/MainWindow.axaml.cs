@@ -18,13 +18,13 @@ public partial class MainWindow : Window
     private bool _userStop;
 
     public MainWindow()
-        : this(HostOrchestrator.CreateDefault())
+        : this(HostOrchestrator.CreateDefault(), LaunchSettings.DefaultPath())
     {
     }
 
-    public MainWindow(HostOrchestrator orchestrator)
+    public MainWindow(HostOrchestrator orchestrator, string? settingsPath = null)
     {
-        _viewModel = new MainWindowViewModel(orchestrator);
+        _viewModel = new MainWindowViewModel(orchestrator, settingsPath);
         _viewModel.DiagnosticRaised += OnDiagnosticRaised;
         _viewModel.LaunchRequested += OnLaunchRequested;
         _viewModel.StopRequested += OnStopRequested;
@@ -47,6 +47,35 @@ public partial class MainWindow : Window
 
         e.Handled = true;
         _ = SendInputAsync(mapping);
+    }
+
+    private void OnBack(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
+        _ = SendKeyAsync(AdbInput.KeyBack);
+
+    private void OnHome(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
+        _ = SendKeyAsync(AdbInput.KeyHome);
+
+    private void OnRecents(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
+        _ = SendKeyAsync(AdbInput.KeyRecents);
+
+    private async Task SendKeyAsync(int keyCode)
+    {
+        var session = _session;
+        if (session is null)
+            return;
+
+        try
+        {
+            var serial = AdbInput.LoopbackSerial(session.AdbHostPort);
+            var result = await _adb.RunAsync(AdbInput.KeyEventCommand(serial, keyCode), CancellationToken.None).ConfigureAwait(true);
+            _viewModel.StatusMessage = result.ExitCode == 0
+                ? $"Sent key {keyCode} to {serial}."
+                : $"adb could not send key {keyCode}. {result.Output}".Trim();
+        }
+        catch (Exception ex)
+        {
+            _viewModel.StatusMessage = ex.Message;
+        }
     }
 
     private void OnSurfacePointerPressed(object? sender, PointerPressedEventArgs e)

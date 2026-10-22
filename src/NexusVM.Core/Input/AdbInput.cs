@@ -41,6 +41,31 @@ public static class AdbInput
 
     public static IReadOnlyList<string> DevicesCommand() => new[] { "devices" };
 
+    public const int KeyHome = 3;
+
+    public const int KeyBack = 4;
+
+    public const int KeyRecents = 187;
+
+    public static IReadOnlyList<string> KeyEventCommand(string serial, int keyCode)
+    {
+        if (!IsLoopbackSerial(serial))
+            throw new ArgumentException("ADB serial must be 127.0.0.1 and a port.", nameof(serial));
+
+        if (keyCode is not (KeyHome or KeyBack or KeyRecents))
+            throw new ArgumentOutOfRangeException(nameof(keyCode), "Only Back, Home, and Recents are sent.");
+
+        return new[]
+        {
+            "-s",
+            serial,
+            "shell",
+            "input",
+            "keyevent",
+            keyCode.ToString(CultureInfo.InvariantCulture),
+        };
+    }
+
     public static string DeviceState(string devicesOutput, string serial)
     {
         if (!IsLoopbackSerial(serial))
@@ -87,6 +112,17 @@ public static class AdbInput
 
         if (arguments.Count == 2 && arguments[0] is "connect" or "disconnect" && IsLoopbackSerial(arguments[1]))
             return;
+
+        if (arguments.Count == 6
+            && arguments[0] == "-s"
+            && IsLoopbackSerial(arguments[1])
+            && arguments[2] == "shell"
+            && arguments[3] == "input"
+            && arguments[4] == "keyevent"
+            && arguments[5] is "3" or "4" or "187")
+        {
+            return;
+        }
 
         var input = arguments.Count == 7 && arguments[4] == "tap"
             || arguments.Count == 10 && arguments[4] == "swipe";

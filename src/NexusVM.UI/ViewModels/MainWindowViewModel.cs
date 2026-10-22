@@ -9,10 +9,13 @@ namespace NexusVM.UI.ViewModels;
 public partial class MainWindowViewModel : ObservableObject
 {
     private readonly HostOrchestrator _orchestrator;
+    private readonly string? _settingsPath;
+    private bool _settingsReady;
 
-    public MainWindowViewModel(HostOrchestrator orchestrator)
+    public MainWindowViewModel(HostOrchestrator orchestrator, string? settingsPath = null)
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
+        _settingsPath = settingsPath;
     }
 
     [ObservableProperty]
@@ -111,6 +114,7 @@ public partial class MainWindowViewModel : ObservableObject
             ? $"{environment.Describe()} · {acceleration.AcceleratorName}"
             : acceleration.Summary;
         StartupDiagnostic = acceleration.IsAvailable ? null : acceleration.ToException();
+        LoadSavedPaths();
         LoadKeymap();
         UpdatePreview();
         InspectionCompleted?.Invoke(this, EventArgs.Empty);
@@ -164,11 +168,51 @@ public partial class MainWindowViewModel : ObservableObject
         StopCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnSystemImagePathChanged(string value) => UpdatePreview();
+    partial void OnSystemImagePathChanged(string value)
+    {
+        UpdatePreview();
+        SavePaths();
+    }
 
-    partial void OnDataImagePathChanged(string value) => UpdatePreview();
+    partial void OnDataImagePathChanged(string value)
+    {
+        UpdatePreview();
+        SavePaths();
+    }
 
-    partial void OnFirmwarePathChanged(string value) => UpdatePreview();
+    partial void OnFirmwarePathChanged(string value)
+    {
+        UpdatePreview();
+        SavePaths();
+    }
+
+    private void LoadSavedPaths()
+    {
+        if (_settingsReady || string.IsNullOrWhiteSpace(_settingsPath))
+            return;
+
+        _settingsReady = true;
+        var saved = LaunchSettings.Load(_settingsPath);
+        if (string.IsNullOrWhiteSpace(SystemImagePath) && saved.SystemImagePath is not null)
+            SystemImagePath = saved.SystemImagePath;
+        if (string.IsNullOrWhiteSpace(DataImagePath) && saved.DataImagePath is not null)
+            DataImagePath = saved.DataImagePath;
+        if (string.IsNullOrWhiteSpace(FirmwarePath) && saved.FirmwarePath is not null)
+            FirmwarePath = saved.FirmwarePath;
+    }
+
+    private void SavePaths()
+    {
+        if (!_settingsReady || string.IsNullOrWhiteSpace(_settingsPath))
+            return;
+
+        new LaunchSettings
+        {
+            SystemImagePath = NullIfBlank(SystemImagePath),
+            DataImagePath = NullIfBlank(DataImagePath),
+            FirmwarePath = NullIfBlank(FirmwarePath),
+        }.Save(_settingsPath);
+    }
 
     private void UpdatePreview()
     {

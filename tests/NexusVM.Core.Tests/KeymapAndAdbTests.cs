@@ -1,3 +1,4 @@
+using NexusVM.Core.Engine;
 using NexusVM.Core.Input;
 
 namespace NexusVM.Core.Tests;
@@ -75,6 +76,43 @@ public sealed class KeymapAndAdbTests
             { "profileName": "Test", "mappings": [ { "key": "F", "action": "tap", "targetX": -1, "targetY": 2 } ] }
             """));
         Assert.Contains("targetX", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Navigation_keys_are_limited_to_back_home_and_recents()
+    {
+        Assert.Equal(
+            new[] { "-s", "127.0.0.1:5555", "shell", "input", "keyevent", "4" },
+            AdbInput.KeyEventCommand("127.0.0.1:5555", AdbInput.KeyBack));
+        AdbInput.EnsureSafe(AdbInput.KeyEventCommand("127.0.0.1:5555", AdbInput.KeyHome));
+        AdbInput.EnsureSafe(AdbInput.KeyEventCommand("127.0.0.1:5555", AdbInput.KeyRecents));
+        Assert.Throws<ArgumentOutOfRangeException>(() => AdbInput.KeyEventCommand("127.0.0.1:5555", 26));
+    }
+
+    [Fact]
+    public void Launch_settings_round_trip_and_drop_control_characters()
+    {
+        var directory = Directory.CreateTempSubdirectory("nexusvm-settings").FullName;
+        try
+        {
+            var path = Path.Combine(directory, "launch.json");
+            new LaunchSettings
+            {
+                SystemImagePath = "/images/system.img",
+                DataImagePath = "  /images/data.img  ",
+                FirmwarePath = "/fw/efi.fd\n",
+            }.Save(path);
+
+            var loaded = LaunchSettings.Load(path);
+            Assert.Equal("/images/system.img", loaded.SystemImagePath);
+            Assert.Equal("/images/data.img", loaded.DataImagePath);
+            Assert.Null(loaded.FirmwarePath);
+            Assert.Null(LaunchSettings.Load(Path.Combine(directory, "missing.json")).SystemImagePath);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]

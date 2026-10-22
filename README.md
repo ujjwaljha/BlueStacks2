@@ -83,7 +83,7 @@ dotnet test NexusVM.sln
 
 ## 🎹 Key-Mapping Schema (`assets/keymaps/default.json`)
 
-When a guest starts, NexusVM runs `adb connect 127.0.0.1:<port>` and then `adb devices` until that serial is `device`, `offline`, or `unauthorized`. QEMU’s log is shown under the guest surface. Matching keys, and a left click on the surface, then become `adb shell input tap` or `swipe`. Edit writes the profile back to `assets/keymaps/default.json`:
+When a guest starts, NexusVM runs `adb connect 127.0.0.1:<port>` and then `adb devices` until that serial is `device`, `offline`, or `unauthorized`. Back, Home, and Recents send `input keyevent` for codes 4, 3, and 187. Image paths are remembered in the per-user `NexusVM/launch.json` file. QEMU’s log is shown under the guest surface. Matching keys, and a left click on the surface, then become `adb shell input tap` or `swipe`. Edit writes the profile back to `assets/keymaps/default.json`:
 
 ```json
 {

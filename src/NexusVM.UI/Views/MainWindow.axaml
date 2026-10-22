@@ -113,10 +113,12 @@
             CornerRadius="10"
             ClipToBounds="True">
       <Grid RowDefinitions="Auto,*,140">
-        <TextBlock Grid.Row="0"
-                   Margin="14,10"
-                   Opacity="0.75"
-                   Text="{Binding SurfaceCaption}" />
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Margin="14,8">
+          <TextBlock VerticalAlignment="Center" Opacity="0.75" Text="{Binding SurfaceCaption}" />
+          <Button Grid.Column="1" Content="Back" Margin="8,0,0,0" IsEnabled="{Binding IsRunning}" Click="OnBack" />
+          <Button Grid.Column="2" Content="Home" Margin="8,0,0,0" IsEnabled="{Binding IsRunning}" Click="OnHome" />
+          <Button Grid.Column="3" Content="Recents" Margin="8,0,0,0" IsEnabled="{Binding IsRunning}" Click="OnRecents" />
+        </Grid>
         <views:QemuSurfaceView Grid.Row="1" x:Name="Surface" />
         <TextBox Grid.Row="2"
                  Classes="mono"

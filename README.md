@@ -67,7 +67,7 @@ nexus-vm/
 ## 🏗️ Building and Compiling
 
 ### Core Dependency Management
-NexusVM assumes standard QEMU system binaries are either accessible in your local system path (`PATH`) or placed systematically within the executing application target framework root under an `assets/bin/` subfolder.
+NexusVM looks for `qemu-system-x86_64` or `qemu-system-aarch64` in `assets/bin` next to the app, then on `PATH`. On Windows and Linux an `.iso` system image is attached with `-cdrom` and booted as the optical drive. Apple Silicon uses an arm64 GSI disk image instead.
 
 ### Compilation
 Build with the .NET 10 SDK. The projects target `net8.0`.

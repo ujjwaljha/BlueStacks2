@@ -73,6 +73,29 @@ public sealed class QemuCommandBuilderTests
     }
 
     [Fact]
+    public void Iso_system_image_is_a_cdrom_on_x86()
+    {
+        var system = Image("Android-x86_64.iso");
+        var plan = Build(HostPlatformKind.LinuxX64, system: system);
+        var full = Path.GetFullPath(system);
+        var cdrom = plan.Arguments.ToList().IndexOf("-cdrom");
+
+        Assert.True(cdrom >= 0);
+        Assert.Equal(full, plan.Arguments[cdrom + 1]);
+        Assert.Contains("order=d", plan.Arguments);
+        Assert.DoesNotContain(plan.Arguments, argument => argument.Contains("id=system", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Iso_is_refused_on_apple_silicon()
+    {
+        var exception = Assert.Throws<AccelerationDiagnosticException>(() =>
+            Build(HostPlatformKind.MacOsArm64, system: Image("android.iso"), firmware: Image("QEMU_EFI.fd")));
+
+        Assert.Equal("Apple Silicon needs a disk image", exception.Title);
+    }
+
+    [Fact]
     public void Qcow2_extension_selects_the_qcow2_format()
     {
         var plan = Build(HostPlatformKind.WindowsX64, system: Image("system.qcow2"));

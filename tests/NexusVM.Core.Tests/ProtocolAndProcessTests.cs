@@ -104,11 +104,18 @@ public sealed class ProtocolAndProcessTests
             var binary = Path.Combine(directory, "qemu-system-x86_64");
             File.WriteAllBytes(binary, new byte[] { 0 });
             File.WriteAllBytes(Path.Combine(directory, "not-qemu"), new byte[] { 0 });
-            var locator = new PathQemuBinaryLocator(directory);
+            var locator = new PathQemuBinaryLocator(directory, bundledDirectories: Array.Empty<string>());
 
             Assert.Equal(Path.GetFullPath(binary), locator.Locate("qemu-system-x86_64"));
             Assert.Null(locator.Locate("qemu-system-aarch64"));
             Assert.Throws<ArgumentOutOfRangeException>(() => locator.Locate("bash"));
+
+            var bundled = Directory.CreateTempSubdirectory("nexusvm-bundled").FullName;
+            var bundledBinary = Path.Combine(bundled, "qemu-system-x86_64");
+            File.WriteAllBytes(bundledBinary, new byte[] { 1 });
+            var preferBundled = new PathQemuBinaryLocator(directory, new[] { bundled });
+            Assert.Equal(Path.GetFullPath(bundledBinary), preferBundled.Locate("qemu-system-x86_64"));
+            Directory.Delete(bundled, recursive: true);
         }
         finally
         {

@@ -57,11 +57,11 @@ public sealed class HostOrchestrator
     private static string InstallHint(HostPlatformKind platform) => platform switch
     {
         HostPlatformKind.WindowsX64 =>
-            "Install QEMU for Windows and add its directory to PATH. The binary name is qemu-system-x86_64.exe.",
+            "Install QEMU for Windows and add its directory to PATH, or place qemu-system-x86_64.exe in assets/bin.",
         HostPlatformKind.LinuxX64 =>
-            "Install the distro qemu-system-x86 package so qemu-system-x86_64 is on PATH.",
+            "Install the distro qemu-system-x86 package so qemu-system-x86_64 is on PATH, or place that binary in assets/bin.",
         HostPlatformKind.MacOsArm64 =>
-            "Install QEMU (for example from Homebrew) so qemu-system-aarch64 is on PATH.",
-        _ => "Install QEMU and ensure the matching system binary is on PATH.",
+            "Install QEMU (for example from Homebrew) so qemu-system-aarch64 is on PATH, or place that binary in assets/bin.",
+        _ => "Install QEMU and ensure the matching system binary is on PATH or in assets/bin.",
     };
 }

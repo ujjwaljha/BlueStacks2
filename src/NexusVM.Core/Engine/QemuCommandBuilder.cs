@@ -49,6 +49,13 @@ public sealed class QemuCommandBuilder
         var data = RequireImage(request.DataImagePath, "Data image", required: false);
         var firmwareRequired = environment.Platform == HostPlatformKind.MacOsArm64;
         var firmware = RequireImage(request.FirmwarePath, "UEFI firmware", firmwareRequired);
+        if (firmwareRequired && IsOpticalImage(system!))
+        {
+            throw new AccelerationDiagnosticException(
+                "Apple Silicon needs a disk image",
+                "An .iso is an optical image. This host boots an arm64 GSI disk (.img or .qcow2) with UEFI firmware.",
+                "Choose an Android arm64 GSI instead of an x86 ISO.");
+        }
 
         var port = RequirePort(_ports.Allocate());
         var adbPort = RequirePort(_ports.Allocate());
@@ -127,7 +134,7 @@ public sealed class QemuCommandBuilder
         arguments.Add("usb-tablet");
         AddDisplay(arguments, display);
         AddQmp(arguments, qmpPort);
-        AddDrive(arguments, "system", systemImage);
+        AddSystemImage(arguments, systemImage);
         if (dataImage is not null)
             AddDrive(arguments, "userdata", dataImage);
         AddUserNet(arguments, adbHostPort);
@@ -176,6 +183,24 @@ public sealed class QemuCommandBuilder
         arguments.Add("-qmp");
         arguments.Add("tcp:127.0.0.1:" + port.ToString(System.Globalization.CultureInfo.InvariantCulture) + ",server,nowait");
     }
+
+    private static void AddSystemImage(List<string> arguments, string path)
+    {
+        if (!IsOpticalImage(path))
+        {
+            AddDrive(arguments, "system", path);
+            return;
+        }
+
+        // A separate argument, so a comma in the path cannot become another QEMU option.
+        arguments.Add("-cdrom");
+        arguments.Add(path);
+        arguments.Add("-boot");
+        arguments.Add("order=d");
+    }
+
+    private static bool IsOpticalImage(string path) =>
+        Path.GetExtension(path).Equals(".iso", StringComparison.OrdinalIgnoreCase);
 
     private static void AddDrive(List<string> arguments, string id, string path)
     {
